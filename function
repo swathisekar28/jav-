@@ -1,0 +1,17 @@
+select*from holder;
+create or replace function details(
+    p_holderid number)
+    return varchar2
+    is
+    v_name varchar(100);
+    v_address varchar(200);
+    begin 
+    select name,address into v_name,v_address from holder where holder_id=p_holderid;
+    return 'name:'||v_name||'address:'||v_address;
+    end;
+    declare 
+    v_details varchar(255);
+    begin 
+    v_details:=details(1);
+    DBMS_OUTPUT.PUT_LINE(v_details);
+    end;
