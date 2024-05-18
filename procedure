@@ -111,3 +111,26 @@ BEGIN
     END IF;
 END;
 /
+create or replace procedure trans_amt(
+    p_whereacc number,
+    p_toacc number ,
+    p_amt number
+)
+as
+v_whereacc number;
+v_toacc number;
+begin
+select balance into v_whereacc from account where account_id=p_whereacc;
+select balance into v_toacc from account where account_id=p_toacc;
+if(v_whereacc>=p_amt) then
+update account set balance=balance-p_amt where account_id=p_whereacc;
+update account set balance=balance+p_amt where account_id=p_toacc;
+
+DBMS_OUTPUT.PUT_LINE('TRANSFER SUCCESSFUL');
+ELSE
+DBMS_OUTPUT.PUT_LINE('TRANSFER NOT SUCCESSFUL');
+END IF;
+end;
+begin
+trans_amt(11,12,5000); 
+end;
