@@ -1,0 +1,113 @@
+CREATE TABLE holder (
+    holder_id NUMBER PRIMARY KEY,
+    name VARCHAR2(100) NOT NULL,
+    address VARCHAR2(255)
+);
+
+CREATE TABLE account (
+    account_id NUMBER PRIMARY KEY,
+    holder_id NUMBER NOT NULL,
+    balance NUMBER(15, 2) DEFAULT 0.00,
+    tradare DATE,
+   FOREIGN KEY (holder_id) REFERENCES holder(holder_id)
+);
+
+
+CREATE OR REPLACE PROCEDURE add_account (
+    P_acc number,
+    p_holder_id NUMBER,
+    p_initial_balance NUMBER,
+    p_tradare DATE
+)
+AS
+BEGIN
+    INSERT INTO account (account_id, holder_id, balance, tradare)
+    VALUES (p_acc, p_holder_id, p_initial_balance, p_tradare);
+END;
+/
+CREATE OR REPLACE PROCEDURE update_account_balance (
+    p_account_id NUMBER,
+    p_new_balance NUMBER
+)
+AS
+BEGIN
+    UPDATE account
+    SET balance = p_new_balance
+    WHERE account_id = p_account_id;
+END;
+/
+CREATE OR REPLACE PROCEDURE delete_account (
+    p_account_id NUMBER
+)
+AS
+BEGIN
+    DELETE FROM account
+    WHERE account_id = p_account_id;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE get_account_details (
+    p_account_id NUMBER
+)
+AS
+    v_holder_id NUMBER;
+    v_balance NUMBER;
+    v_trade_date DATE;
+BEGIN
+    SELECT holder_id, balance, trade_date
+    INTO v_holder_id, v_balance, v_trade_date
+    FROM account
+    WHERE account_id = p_account_id;
+
+    DBMS_OUTPUT.PUT_LINE('Holder ID: ' || v_holder_id);
+    DBMS_OUTPUT.PUT_LINE('Balance: ' || v_balance);
+    DBMS_OUTPUT.PUT_LINE('Trade Date: ' || TO_CHAR(v_trade_date, 'DD-MON-YYYY'));
+END;
+/
+INSERT INTO holder VALUES (1, 'John Doe', '123 Elm Street');
+INSERT INTO holder VALUES (2, 'Jane Smith', '456 Oak Avenue');
+INSERT INTO holder VALUES (3, 'Smith', 'park Avenue');
+INSERT INTO holder VALUES (4, 'Jane', 'avenue');
+INSERT INTO holder VALUES (5, 'joe', 'anna nager');
+
+BEGIN
+    -- Adds a new account for the holder with ID 1 (after inserting above)
+    add_account(11,1, 1000.00, SYSDATE);
+    -- Adds a new account for the holder with ID 2 (after inserting above)
+    add_account(12,2, 2000.00, SYSDATE);
+    add_account(13,3, 3000.00, SYSDATE);
+    add_account(14,4, 4000.00, SYSDATE);
+    add_account(15,5, 5000.00, SYSDATE);
+END;
+/
+select * from account;
+
+begin
+update_account_balance (11,15000);
+end;
+CREATE OR REPLACE PROCEDURE transfer_balance (
+    p_from_account_id NUMBER,
+    p_to_account_id NUMBER,
+    p_amount NUMBER
+)
+AS
+    v_from_balance NUMBER;
+    v_to_balance NUMBER;
+BEGIN
+    -- Check balances
+    SELECT balance INTO v_from_balance FROM account WHERE account_id = p_from_account_id;
+    SELECT balance INTO v_to_balance FROM account WHERE account_id = p_to_account_id;
+
+    IF v_from_balance >= p_amount THEN
+        -- Update from account
+        UPDATE account SET balance = balance - p_amount WHERE account_id = p_from_account_id;
+
+        -- Update to account
+        UPDATE account SET balance = balance + p_amount WHERE account_id = p_to_account_id;
+
+        DBMS_OUTPUT.PUT_LINE('Transfer successful.');
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('Insufficient funds.');
+    END IF;
+END;
+/
